@@ -17,9 +17,9 @@ was validated on held-out data. The visual sibling of
   <a href="https://github.com/Gjusev/MK-SH-1"><b>MK-SH-1</b></a>
 </p>
 
-| 0.828 | τ = 0.55 | 98.6 % |
+| 0.839 | τ = 0.55 | 98.3 % |
 |:---|:---|:---|
-| accuracy on real screenshots, held out; a ~15× larger model run zero-shot scores 0.731 | the refusal gate, fitted on a calibration split by a rule frozen in advance | answered on the held-out synthetic test, with a 95 % Clopper-Pearson risk bound of 4.1 % |
+| accuracy on real screenshots, held out; a ~15× larger model run zero-shot scores 0.731 | the refusal gate, fitted on a calibration split by a rule frozen in advance | answered on the held-out synthetic test, with a 95 % Clopper-Pearson risk bound of 3.2 % |
 
 ## What it does
 
@@ -64,8 +64,11 @@ flowchart LR
 
 The repo also ships the second trained seed (`release/model-s42.safetensors`) and
 `release/inference-policy-ensemble.json`: average the two members' probabilities,
-T 0.8329, gate tau 0.30. It beats the released single seed on all seven held-out
-sets (fresh 0.778 vs 0.737) at 2x inference. The demo stays single-seed.
+T 0.8329, gate tau 0.30. It beat the E47 single seed on all seven held-out sets at 2x inference.
+The E52 pair was also measured as an ensemble (E53 per-case refit): the
+single E52-s43 beats it on every held-out set, so the current release ships
+single-seed and the ensemble option applies to the E47 pair (weights kept
+as model-e47-s43/s42.safetensors). The demo stays single-seed.
 
 ## Play the booth
 
@@ -127,21 +130,21 @@ the real-image questions are in English, Spanish and German.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/chart-accuracy-dark.png">
-  <img src="assets/chart-accuracy.png" alt="Accuracy on real held-out images. Screenshots: MK-SH-V 0.828 (shipped seed 43) and 0.800, jev-vlm-4b 0.731, OCR plus MK-SH-1 0.472, synthetic only 0.493. Receipts: MK-SH-V 0.734 and 0.734, jev-vlm-4b 0.972, OCR 0.486, synthetic only 0.394. All real: 0.807 and 0.786 against 0.785, 0.475 and 0.471.">
+  <img src="assets/chart-accuracy.png" alt="Accuracy on real held-out images. Screenshots: MK-SH-V 0.839 (shipped seed 43) and 0.811, jev-vlm-4b 0.731, OCR plus MK-SH-1 0.472, synthetic only 0.493. Receipts: MK-SH-V 0.729 and 0.733, jev-vlm-4b 0.972, OCR 0.486, synthetic only 0.394. All real: 0.814 and 0.794 against 0.785, 0.475 and 0.471.">
 </picture>
 
 Every arm was run by us on the same 2,586 real held-out cases with pinned
 revisions; labels come from each source's ground truth. On real screenshots
 the 260M model leads a ~15× larger zero-shot model; on receipt thresholds it
-trails it (0.734 against 0.972) and sits above a deterministic rules baseline
-(0.594). Overall the two are level (0.807 and 0.786 against 0.785); no paired
+trails it (0.729 against 0.972) and sits above a deterministic rules baseline
+(0.594). Overall the 260M leads (0.814 and 0.794 against 0.785); no paired
 test was run for this checkpoint, so read that as a tie. That comparator may
 have seen these sources in pretraining; its card cannot tell us.
 
 | Arm | Params | Real overall | Receipts (CORD) | Screenshots (GUI) |
 |---|---|---|---|---|
-| **MK-SH-V s43 (shipped)** | **260M** | **0.807** | 0.734 | **0.828** |
-| **MK-SH-V s42** | **260M** | **0.786** | 0.734 | **0.800** |
+| **MK-SH-V s43 (shipped)** | **260M** | **0.814** | 0.729 | **0.839** |
+| **MK-SH-V s42** | **260M** | **0.794** | 0.733 | **0.811** |
 | jev-vlm-4b, zero-shot | ~4B | 0.785 | 0.972 | 0.731 |
 | OCR → MK-SH-1 | ~25M | 0.475 | 0.486 | 0.472 |
 | Same model, synthetic only (E39) | 260M | 0.471 | 0.394 | 0.493 |
@@ -153,19 +156,19 @@ fine-tuned that checkpoint for printed numbers: E46 enlarges every image to
 numeric result on 3,000 fresh documents and refitted the gate. Against the
 E41 release the synthetic test rises from 0.908 and 0.909 to 0.959 on both
 seeds and real receipts from 0.550 and 0.602 to 0.734. Text competence from
-MK-SH-1 is kept through replay: testC 1.000, routing task 0.830 and 0.833.
+MK-SH-1 is kept through replay: testC 1.000, routing task 0.823 and 0.807.
 Criteria for every step: `docs/E44_CRITERIA_*.md` to `docs/E48_CRITERIA_*.md`.
 
 ## The refusal gate, held out
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/chart-gate-dark.png">
-  <img src="assets/chart-gate.png" alt="Selective risk at each seed's fitted tau (0.55 for the shipped seed 43, 0.30 for seed 42) with exact 95 percent Clopper-Pearson intervals per held-out set. Synthetic test: 3.5 and 4.1 percent, upper bounds 4.1 and 4.8 percent, inside the 5 percent budget. French synthetic, fresh numeric documents, real screenshots 16.1 and 20.0 percent, real receipts 25.3 and 26.6 percent and text routing: outside the budget.">
+  <img src="assets/chart-gate.png" alt="Selective risk at each seed's fitted tau (0.55 for both E52 seeds) with exact 95 percent Clopper-Pearson intervals per held-out set. Synthetic test upper bounds 3.8 and 3.2 percent, inside the 5 percent budget. French synthetic, fresh numeric documents, real screenshots 16.1 and 20.0 percent, real receipts 25.3 and 26.6 percent and text routing: outside the budget.">
 </picture>
 
 > On our held-out synthetic evaluation, both 260M checkpoints answered at
-> least 98.6 % of cases while maintaining a 95 % Clopper-Pearson upper
-> confidence bound on selective risk below 5 % (4.1 % and 4.8 %).
+> least 98.3 % of cases while maintaining a 95 % Clopper-Pearson upper
+> confidence bound on selective risk below 5 % (3.2 % and 3.8 %).
 
 That sentence is the whole claim, and the chart shows where it stops. With
 the shipped seed, the gate keeps 97 % of real screenshots while 16 % of the
@@ -184,9 +187,9 @@ measurement stops.
 
 1. **End-of-task screen detection over screenshots.** "Does this screenshot
    show the goal as completed": agent supervision, UI QA, step verification.
-   Rests on GUI-Odyssey held-out pairs, 0.828 and 0.800. Bound, from the
+   Rests on GUI-Odyssey held-out pairs, 0.839 and 0.811. Bound, from the
    goal-swap diagnostic (each final screenshot paired with an unrelated goal):
-   E47 rejects the wrong goal 0.775 and 0.785 of the time, up from 0.12 and
+   E52 rejects the wrong goal 0.770 and 0.843 of the time, up from 0.12 and
    0.135 in E41 but under the 0.80 bar frozen for a goal claim. Use it as
    end-of-task screen detection, not goal verification. Also binary questions
    in EN, ES and DE from that corpus; not a general GUI understanding model,
@@ -197,7 +200,7 @@ measurement stops.
    urgency at 0.995 to 1.000 held out, seed 42). **Printed numeric thresholds** ("is the total at least
    X") are now a measured capability with a ceiling: 0.718 and 0.725 on the
    synthetic test, 0.737 and 0.760 on 3,000 fresh documents nobody had read
-   (E48, criteria frozen before generation), and 0.734 on real receipts
+   (E48, criteria frozen before generation), 0.763 on those same never-read documents for the shipped E52 seed, and 0.729 on real receipts
    against a rules baseline at 0.594. Bound: fine gaps under 1 % between total
    and threshold remain the hard part, the fresh set shares the test
    templates, and the gate is not validated for this family.

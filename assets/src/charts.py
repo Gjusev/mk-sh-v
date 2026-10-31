@@ -4,7 +4,7 @@ bar is direct-labelled and the README carries the same numbers as tables.
 
     python assets/src/charts.py      # writes assets/src/charts.html, then render.py
 
-Numbers: MK-SH-V (E47 checkpoints) from runs/e48/e48_summary.json, the E39
+Numbers: MK-SH-V (E52 checkpoints) from runs/e53/e53_summary.json, the E39
 synthetic-only arm from runs/e41/e41_report.json (read here); other comparators as
 published in README (E39-r2 jev zero-shot, E39 OCR arm), measured by us on the same
 2,586 rows.
@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 E41 = json.loads((ROOT / "runs/e41/e41_report.json").read_text(encoding="utf-8"))["seeds"]
-E48 = json.loads((ROOT / "runs/e48/e48_summary.json").read_text(encoding="utf-8"))["seeds"]
+E48 = json.loads((ROOT / "runs/e53/e53_summary.json").read_text(encoding="utf-8"))["seeds"]
 N_GUI, N_CORD = 2010, 576
 
 def mk(seed):

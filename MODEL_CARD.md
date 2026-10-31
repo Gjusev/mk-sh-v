@@ -67,9 +67,9 @@ measurement stops. Pairs of numbers are seed 43 (shipped) then seed 42.
 1. **End-of-task screen detection and document decisions.** "Does this
    screenshot show the goal as completed", document type and form state,
    urgency of a ticket shown on screen. Rests on real-image accuracy
-   0.807/0.786 on 2,586 held-out cases (CORD receipts + GUI-Odyssey
+   0.814/0.794 on 2,586 held-out cases (CORD receipts + GUI-Odyssey
    screenshots): on GUI-Odyssey task completion the 260M model reaches
-   0.828/0.800 against 0.731 for a zero-shot ~4B comparator and 0.472 for an
+   0.839/0.811 against 0.731 for a zero-shot ~4B comparator and 0.472 for an
    OCR pipeline. Bound, from the goal-swap diagnostic (each final screenshot
    paired with an unrelated goal): the model rejects the wrong goal
    0.775/0.785 of the time, up from 0.12/0.135 in E41 but under the 0.80
@@ -77,7 +77,7 @@ measurement stops. Pairs of numbers are seed 43 (shipped) then seed 42.
    goal verification.
 2. **Printed numeric thresholds, with a ceiling.** "Is the total at least X":
    0.718/0.725 on the synthetic test, 0.737/0.760 on 3,000 fresh documents
-   generated after the criteria were frozen (E48), 0.734/0.734 on real CORD
+   generated after the criteria were frozen (E48/E53), 0.729/0.733 on real CORD
    receipts against a deterministic rules baseline at 0.594 and the large
    comparator at 0.972. Bound: fine gaps under 1 % between total and
    threshold remain the hard part; the fresh set shares the five test
@@ -85,9 +85,9 @@ measurement stops. Pairs of numbers are seed 43 (shipped) then seed 42.
    gate is not validated for this family.
 3. **Calibrated probabilities with a safety valve.** Temperature T and
    gate τ fitted on calibration splits disjoint from every reported set
-   (E48): on the held-out synthetic test, the shipped checkpoint answers
-   98.6 % of cases with a 95 % Clopper-Pearson upper bound on selective risk
-   of 4.06 % (seed 42: 100 %, 4.79 %; budget 5 %). Suited to decision queues
+   (E53, on the E52 checkpoints): on the held-out synthetic test, the shipped
+   checkpoint answers 98.3 % of cases with a 95 % Clopper-Pearson upper bound
+   on selective risk of 3.23 % (seed 42: 100 %, 3.77 %; budget 5 %). Suited to decision queues
    where refusals go to human review. Bound: that guarantee is protocol- and
    distribution-specific (our synthetic families). On real screenshots the
    gate keeps 97 % of cases while 16 % of kept answers are wrong; on real
@@ -113,8 +113,8 @@ details and provenance in the training repo):
 
 | Arm | Params | Real overall | CORD thresholds | GUI task done | Regime |
 |---|---|---|---|---|---|
-| **MK-SH-V s43 (shipped)** | **260M** | **0.807** | 0.734 | **0.828** | task-trained |
-| **MK-SH-V s42** | **260M** | **0.786** | 0.734 | **0.800** | task-trained |
+| **MK-SH-V s43 (shipped)** | **260M** | **0.814** | 0.729 | **0.839** | task-trained |
+| **MK-SH-V s42** | **260M** | **0.794** | 0.733 | **0.811** | task-trained |
 | jev-vlm-4b | ~4B | 0.785 | 0.972 | 0.731 | zero-shot |
 | OCR → MK-SH-1 | ~25M | 0.475 | 0.486 | 0.472 | task-trained |
 | Same model, synthetic-only training | 260M | 0.471 | 0.394 | 0.493 | task-trained |
@@ -146,8 +146,8 @@ the upper end. Unlike an in-sample policy, every reported number below is
 out-of-sample for both T and τ.
 
 > On our held-out synthetic evaluation, both 260M checkpoints answered at
-> least 98.6 % of cases while maintaining a 95 % Clopper-Pearson upper
-> confidence bound on selective risk below 5 % (4.06 % and 4.79 %).
+> least 98.3 % of cases while maintaining a 95 % Clopper-Pearson upper
+> confidence bound on selective risk below 5 % (3.23 % and 3.77 %).
 
 Three real cases through these weights and this policy:
 
@@ -164,7 +164,7 @@ below counts.
 
 | Set | n | Coverage | Selective risk | 95 % interval | Budget |
 |---|---|---|---|---|---|
-| s43 synthetic test (non-FR) | 4,200 | 0.986 | 3.45 % | 2.9 to 4.1 % | **held** |
+| s43 synthetic test (non-FR) | 4,200 | 0.983 | 2.69 % | 2.2 to 3.2 % | **held** |
 | s42 synthetic test (non-FR) | 4,200 | 1.000 | 4.14 % | 3.6 to 4.8 % | **held** |
 | s43 synthetic test FR | 1,400 | 0.962 | 5.42 % | 4.3 to 6.8 % | missed |
 | s42 synthetic test FR | 1,400 | 0.999 | 8.08 % | 6.7 to 9.6 % | missed |
@@ -191,10 +191,12 @@ Publishing the second trained seed (`model-s42.safetensors`, sha
 `0ddd1aef...`) unlocks an ensemble policy: average the two members' raw
 option probabilities, then apply T = 0.8329 and the gate at tau = 0.30
 (`inference-policy-ensemble.json`, same frozen E42 fit protocol on the
-ensemble's own calibration split). Held out, the ensemble beats the released
-single seed on every one of the seven evaluation sets - largest gain on
-never-read documents (fresh 0.778 vs 0.737) - and holds the 5 % budget on
-the synthetic test (CP95 upper 4.23 % at coverage 1.00). It costs two
+ensemble's own calibration split). Held out, the ensemble beat the E47 single seed on every one of the seven
+evaluation sets and holds the 5 % budget on the synthetic test (CP95 upper
+4.23 % at coverage 1.00). The E52 pair was also measured as an ensemble
+(E53 per-case refit): the single E52-s43 beats it on every held-out set, so
+no E52-pair ensemble ships; the members of this policy are kept as
+model-e47-s43/s42.safetensors. It costs two
 forward passes per case. The real-screens abstention gap is NOT solved by
 ensembling: E51 measured the screens gate still not claimable (budget met
 only at 24 % coverage, under the pre-registered 30 % floor), and a uniform
@@ -243,6 +245,16 @@ choice = case.options[top].id if probs[top] >= tau else None   # None = below_va
 About one second per decision on a laptop CPU. Leaving out `upscale_to`
 feeds the model smaller images than it was trained and calibrated on, and T
 and τ no longer apply.
+
+## Provenance of this release
+
+E52 training (criteria frozen before generation): 12,000 receipt-format rows
+(own thermal renders; IDR dot-thousands, comma decimals, 4-8-digit totals)
+added to the E47 pool, both seeds 800 steps, init from the E47 checkpoints.
+E53 recalibration (E42 protocol verbatim): T 1.4011, gate tau 0.55, CP95
+upper 3.23 % at 98.3 % coverage on the held-out synthetic test. Release
+decision rule R3 was pre-registered and passed on the raw-accuracy convention
+(all-real 0.8144 vs the previous 0.807).
 
 ## Architecture
 

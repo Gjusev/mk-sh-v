@@ -27,7 +27,10 @@ HERE = Path(__file__).parent
 torch.set_num_threads(2)  # cpu-basic gives two vCPUs
 
 # local checkout wins (tests and offline runs); the Space uses the Hub repo
-PKG = Path(os.environ.get("MKSHV_MODEL_DIR") or snapshot_download(MODEL_ID))
+# release 2026-10-29 (E47-s43 + E48 policy): the Amber Checkpoint in-game audit is
+# bound to THESE weights and THIS policy; the repo main has moved on (E52/E53)
+PKG = Path(os.environ.get("MKSHV_MODEL_DIR")
+            or snapshot_download(MODEL_ID, revision="9813f736174026db1fe0d44f8bbed6ce6e7a36c3"))
 POLICY = json.loads((PKG / "inference-policy.json").read_text(encoding="utf-8"))
 T = POLICY["temperature"]["value"]        # fitted on cal_temperature (E48, E42 protocol)
 TAU = POLICY["abstention"]["threshold"]   # fitted on cal_policy (E48), CP-upper rule
